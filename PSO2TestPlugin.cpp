@@ -23,7 +23,7 @@ enum D3D_FAIL_CAUSE : int {
     D3D_FAIL_PARAMS,
 };
 
-D3D_FAIL_CAUSE createDeviceD3D(HWND hWnd) {
+D3D_FAIL_CAUSE CreateDeviceD3D(HWND hWnd) {
     D3DPRESENT_PARAMETERS options;
 
     if (!(d3d = Direct3DCreate9(D3D_SDK_VERSION)))
@@ -51,10 +51,10 @@ enum IM_FAIL_CAUSE : int {
     IM_FAIL_DX9_INIT,
 };
 
-IM_FAIL_CAUSE loadImGui() {
+IM_FAIL_CAUSE LoadImGui() {
     auto gameHwnd = FindWindowA("Phantasy Star Online 2", nullptr);
 
-    auto didCreateSucceed = createDeviceD3D(gameHwnd);
+    auto didCreateSucceed = CreateDeviceD3D(gameHwnd);
     if (didCreateSucceed == D3D_FAIL_CAUSE::D3D_FAIL_VERSION) {
         return IM_FAIL_CAUSE::IM_FAIL_D3D_VERSION;
     } else if (didCreateSucceed == D3D_FAIL_CAUSE::D3D_FAIL_PARAMS) {
@@ -88,7 +88,7 @@ void onDrawUI(const std::function<void()>& drawFunction) {
 DWORD WINAPI PSO2TestPlugin::Initialize() {
     active = true;
 
-    auto status = loadImGui();
+    auto status = LoadImGui();
     if (status != IM_FAIL_CAUSE::IM_FAIL_NONE) {
         constexpr const char* const msgBase = "ImGui load failed with code: ";
         auto msg = std::string(msgBase);
