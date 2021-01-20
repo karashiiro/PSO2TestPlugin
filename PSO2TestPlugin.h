@@ -3,9 +3,9 @@
 #include <Windows.h>
 
 namespace PSO2TestPlugin {
-    void setHandle(HANDLE newHandle);
-    DWORD WINAPI initialize();
-    void dispose();
+    void SetHandle(HANDLE newHandle);
+    DWORD WINAPI Initialize();
+    void Dispose();
 }
 
 extern "C" __declspec(dllexport)
@@ -15,13 +15,13 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD fdwReason, LPVOID) {
         auto handle = CreateThread(
                 nullptr,
                 0,
-                reinterpret_cast<LPTHREAD_START_ROUTINE>(&PSO2TestPlugin::initialize),
+                reinterpret_cast<LPTHREAD_START_ROUTINE>(&PSO2TestPlugin::Initialize),
                 nullptr,
                 0,
                 nullptr);
-        PSO2TestPlugin::setHandle(handle);
+        PSO2TestPlugin::SetHandle(handle);
     } else if (fdwReason == DLL_PROCESS_DETACH) {
-        PSO2TestPlugin::dispose();
+        PSO2TestPlugin::Dispose();
     }
 
     return TRUE;

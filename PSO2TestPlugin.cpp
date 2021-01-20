@@ -13,7 +13,7 @@ static HANDLE handle;
 static IDirect3D9* d3d;
 static IDirect3DDevice9* device;
 
-void PSO2TestPlugin::setHandle(HANDLE newHandle) {
+void PSO2TestPlugin::SetHandle(HANDLE newHandle) {
     handle = newHandle;
 }
 
@@ -85,7 +85,7 @@ void onDrawUI(const std::function<void()>& drawFunction) {
     }
 }
 
-DWORD WINAPI PSO2TestPlugin::initialize() {
+DWORD WINAPI PSO2TestPlugin::Initialize() {
     active = true;
 
     auto status = loadImGui();
@@ -104,7 +104,7 @@ DWORD WINAPI PSO2TestPlugin::initialize() {
     return 1;
 }
 
-void PSO2TestPlugin::dispose() {
+void PSO2TestPlugin::Dispose() {
     active = false;
 
     WaitForSingleObject(handle, INFINITE);
