@@ -8,7 +8,6 @@ namespace PSO2TestPlugin {
     void Dispose();
 }
 
-extern "C" __declspec(dllexport)
 BOOL WINAPI DllMain(HINSTANCE hInst, DWORD fdwReason, LPVOID) {
     if (fdwReason == DLL_PROCESS_ATTACH) {
         DisableThreadLibraryCalls(hInst);
