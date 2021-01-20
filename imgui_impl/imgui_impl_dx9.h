@@ -1,4 +1,4 @@
-// dear imgui: Renderer Backend for DirectX9
+// dear imgui_impl: Renderer Backend for DirectX9
 // This needs to be used along with a Platform Backend (e.g. Win32)
 
 // Implemented features:
@@ -6,7 +6,7 @@
 //  [X] Renderer: Support for large meshes (64k+ vertices) with 16-bit indices.
 
 // You can copy and use unmodified imgui_impl_* files in your project. See examples/ folder for examples of using this.
-// If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
+// If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui_impl.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
 #pragma once

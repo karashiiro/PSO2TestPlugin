@@ -5,8 +5,8 @@
 
 #include "d3d9.h"
 #include "imgui.h"
-#include "imgui/imgui_impl_dx9.h"
-#include "imgui/imgui_impl_win32.h"
+#include "imgui_impl/imgui_impl_dx9.h"
+#include "imgui_impl/imgui_impl_win32.h"
 
 static bool active = false;
 static HANDLE handle;
