@@ -9,15 +9,15 @@ add_library(PSO2TestPlugin SHARED PSO2TestPlugin.cpp PSO2TestPlugin.h imgui_impl
 include(cmake/CPM.cmake)
 
 CPMAddPackage(
-        NAME imgui_impl
+        NAME imgui
         GITHUB_REPOSITORY ocornut/imgui
         VERSION 1.79
 )
 if (imgui_ADDED)
     file(GLOB imgui_SOURCE_FILES ${imgui_SOURCE_DIR}/*.cpp)
-    add_library(imgui_impl ${imgui_SOURCE_FILES})
-    target_include_directories(imgui_impl PUBLIC ${imgui_SOURCE_DIR})
+    add_library(imgui ${imgui_SOURCE_FILES})
+    target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR})
 endif()
 
 # I'd like to get this working on g++, but it screams about Windows libraries even with the hint path set.
-target_link_libraries(PSO2TestPlugin imgui_impl d3d9)
+target_link_libraries(PSO2TestPlugin imgui d3d9)
