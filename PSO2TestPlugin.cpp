@@ -2,12 +2,20 @@
 
 #include <functional>
 #include <string>
-#include <tuple>
 
 #include "d3d9.h"
 #include "imgui.h"
 #include "imgui/imgui_impl_dx9.h"
 #include "imgui/imgui_impl_win32.h"
+
+static bool active = false;
+static HANDLE handle;
+static IDirect3D9* d3d;
+static IDirect3DDevice9* device;
+
+void PSO2TestPlugin::setHandle(HANDLE newHandle) {
+    handle = newHandle;
+}
 
 enum D3D_FAIL_CAUSE : int {
     D3D_FAIL_NONE,
@@ -15,13 +23,11 @@ enum D3D_FAIL_CAUSE : int {
     D3D_FAIL_PARAMS,
 };
 
-std::tuple<IDirect3D9*, IDirect3DDevice9*, D3D_FAIL_CAUSE> createDeviceD3D(HWND hWnd) {
-    IDirect3D9* d3d;
-    IDirect3DDevice9* device;
+D3D_FAIL_CAUSE createDeviceD3D(HWND hWnd) {
     D3DPRESENT_PARAMETERS options;
 
     if (!(d3d = Direct3DCreate9(D3D_SDK_VERSION)))
-        return std::make_tuple(nullptr, nullptr, D3D_FAIL_CAUSE::D3D_FAIL_VERSION);
+        return D3D_FAIL_CAUSE::D3D_FAIL_VERSION;
 
     ZeroMemory(&options, sizeof(options));
     options.Windowed = true;
@@ -32,9 +38,9 @@ std::tuple<IDirect3D9*, IDirect3DDevice9*, D3D_FAIL_CAUSE> createDeviceD3D(HWND 
     options.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; // Present without vsync, maximum unthrottled framerate
 
     if (d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &options, &device) < 0)
-        return std::make_tuple(nullptr, nullptr, D3D_FAIL_CAUSE::D3D_FAIL_PARAMS);
+        return D3D_FAIL_CAUSE::D3D_FAIL_PARAMS;
 
-    return std::make_tuple(d3d, device, D3D_FAIL_CAUSE::D3D_FAIL_NONE);
+    return D3D_FAIL_CAUSE::D3D_FAIL_NONE;
 }
 
 enum IM_FAIL_CAUSE : int {
@@ -48,10 +54,7 @@ enum IM_FAIL_CAUSE : int {
 IM_FAIL_CAUSE loadImGui() {
     auto gameHwnd = FindWindowA("Phantasy Star Online 2", nullptr);
 
-    IDirect3D9* d3d;
-    IDirect3DDevice9* device;
-    D3D_FAIL_CAUSE didCreateSucceed;
-    std::tie(d3d, device, didCreateSucceed) = createDeviceD3D(gameHwnd);
+    auto didCreateSucceed = createDeviceD3D(gameHwnd);
     if (didCreateSucceed == D3D_FAIL_CAUSE::D3D_FAIL_VERSION) {
         return IM_FAIL_CAUSE::IM_FAIL_D3D_VERSION;
     } else if (didCreateSucceed == D3D_FAIL_CAUSE::D3D_FAIL_PARAMS) {
@@ -70,9 +73,8 @@ IM_FAIL_CAUSE loadImGui() {
     return IM_FAIL_CAUSE::IM_FAIL_NONE;
 }
 
-[[noreturn]]
 void onDrawUI(const std::function<void()>& drawFunction) {
-    while (true) {
+    while (active) {
         ImGui_ImplDX9_NewFrame();
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
@@ -84,6 +86,8 @@ void onDrawUI(const std::function<void()>& drawFunction) {
 }
 
 DWORD WINAPI PSO2TestPlugin::initialize() {
+    active = true;
+
     auto status = loadImGui();
     if (status != IM_FAIL_CAUSE::IM_FAIL_NONE) {
         constexpr const char* const msgBase = "ImGui load failed with code: ";
@@ -96,4 +100,18 @@ DWORD WINAPI PSO2TestPlugin::initialize() {
     onDrawUI([&]() {
         ImGui::ShowDemoWindow(&showDemo);
     });
+
+    return 1;
+}
+
+void PSO2TestPlugin::dispose() {
+    active = false;
+
+    WaitForSingleObject(handle, INFINITE);
+
+    d3d->Release();
+    d3d = nullptr;
+
+    device->Release();
+    device = nullptr;
 }
