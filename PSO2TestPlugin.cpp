@@ -37,8 +37,9 @@ std::tuple<IDirect3D9*, IDirect3DDevice9*, HWND> CreateDeviceD3D(HWND hWnd) {
     HWND dummy = CreateWindow("BUTTON", "", WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 300, 300, nullptr, nullptr, nullptr, nullptr);
 
     IDirect3D9* d3d;
-    if (!(d3d = Direct3DCreate9(D3D_SDK_VERSION)))
+    if (!(d3d = Direct3DCreate9(D3D_SDK_VERSION))) {
         return std::make_tuple(nullptr, nullptr, dummy);
+    }
 
     ZeroMemory(&options, sizeof(options));
     options.Windowed = true;
