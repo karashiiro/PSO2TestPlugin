@@ -1,17 +1,18 @@
 #include "PSO2TestPlugin.h"
 
-#include <functional>
-#include <string>
+#include <memory>
 #include <tuple>
 
 #include "d3d9.h"
 #include "detours.h"
+#include "InterfaceManager.h"
 #include "imgui.h"
 #include "imgui_impl/imgui_impl_dx9.h"
 #include "imgui_impl/imgui_impl_win32.h"
 
 static WNDPROC gameWindowProc = nullptr;
 static D3DPRESENT_PARAMETERS options;
+static std::shared_ptr<InterfaceManager> drawManager;
 
 typedef HRESULT(WINAPI* EndScene)(LPDIRECT3DDEVICE9 device);
 static EndScene oEndScene = nullptr;
@@ -91,10 +92,7 @@ HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
 
     // This hides the cursor when a context menu is open and not hovered, for some reason.
     ImGui::GetIO().MouseDrawCursor = ImGui::IsAnyWindowHovered() || ImGui::IsAnyItemHovered();
-
-    auto showDemo = true;
-    ImGui::ShowDemoWindow(&showDemo);
-
+    drawManager->Execute();
     ImGui::Render();
     ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
@@ -115,6 +113,13 @@ DWORD WINAPI PSO2TestPlugin::Initialize() {
     dxVTable = reinterpret_cast<DWORD_PTR*>(dxVTable[0]);
 
     oEndScene = reinterpret_cast<EndScene>(dxVTable[42]);
+
+    drawManager = std::make_shared<InterfaceManager>();
+
+    drawManager->AddHandler([]() {
+        auto showDemo = true;
+        ImGui::ShowDemoWindow(&showDemo);
+    });
 
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
