@@ -3,6 +3,8 @@
 #include <Windows.h>
 
 namespace PSO2TestPlugin {
+    constexpr const char* const IniFilename = "PSO2TestPlugin.ini";
+
     DWORD WINAPI Initialize();
 }
 
