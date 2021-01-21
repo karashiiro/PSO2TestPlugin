@@ -89,7 +89,8 @@ HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::GetIO().MouseDrawCursor = ImGui::IsAnyWindowHovered();
+    // This hides the cursor when a context menu is open and not hovered, for some reason.
+    ImGui::GetIO().MouseDrawCursor = ImGui::IsAnyWindowHovered() || ImGui::IsAnyItemHovered();
 
     auto showDemo = true;
     ImGui::ShowDemoWindow(&showDemo);
