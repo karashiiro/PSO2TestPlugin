@@ -12,6 +12,7 @@ CPMAddPackage(
         NAME imgui
         GITHUB_REPOSITORY ocornut/imgui
         VERSION 1.79
+        DOWNLOAD_ONLY
 )
 if (imgui_ADDED)
     file(GLOB imgui_SOURCE_FILES ${imgui_SOURCE_DIR}/*.cpp)
@@ -19,5 +20,18 @@ if (imgui_ADDED)
     target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR})
 endif()
 
+CPMAddPackage(
+        NAME Detours
+        GITHUB_REPOSITORY microsoft/Detours
+        VERSION 4.0.1
+        DOWNLOAD_ONLY
+)
+if (Detours_ADDED)
+    # Detours is an nmake library, so we need to force some things in weird ways
+    execute_process(COMMAND nmake WORKING_DIRECTORY ${Detours_SOURCE_DIR}/src)
+    set(Detours_Lib ${Detours_SOURCE_DIR}/lib.X86/detours.lib)
+    target_include_directories(PSO2TestPlugin PUBLIC ${Detours_SOURCE_DIR}/include)
+endif()
+
 # I'd like to get this working on g++, but it screams about Windows libraries even with the hint path set.
-target_link_libraries(PSO2TestPlugin imgui d3d9)
+target_link_libraries(PSO2TestPlugin imgui ${Detours_Lib} d3d9)
