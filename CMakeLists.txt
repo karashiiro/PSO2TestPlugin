@@ -33,5 +33,4 @@ if (Detours_ADDED)
     target_include_directories(PSO2TestPlugin PUBLIC ${Detours_SOURCE_DIR}/include)
 endif()
 
-# I'd like to get this working on g++, but it screams about Windows libraries even with the hint path set.
 target_link_libraries(PSO2TestPlugin imgui ${Detours_Lib} d3d9)
