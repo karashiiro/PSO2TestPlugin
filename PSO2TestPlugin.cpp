@@ -9,16 +9,27 @@
 #include "imgui_impl/imgui_impl_dx9.h"
 #include "imgui_impl/imgui_impl_win32.h"
 
+static HANDLE threadHandle = nullptr;
 static HWND dummy;
+static WNDPROC gameWindowProc;
 static D3DPRESENT_PARAMETERS options;
 static IDirect3D9* d3d;
 static IDirect3DDevice9* device;
+static DWORD_PTR* dxVTable;
 
 typedef HRESULT(WINAPI* EndScene)(LPDIRECT3DDEVICE9 device);
 EndScene oEndScene = nullptr;
 
-static DWORD_PTR* dxVTable;
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+void PSO2TestPlugin::SetHandle(HANDLE handle) {
+    threadHandle = handle;
+}
+
+LRESULT CALLBACK HookedWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
+    return CallWindowProc(gameWindowProc, hWnd, uMsg, wParam, lParam);
+}
 
 enum D3D_FAIL_CAUSE : int {
     D3D_FAIL_NONE,
@@ -69,14 +80,12 @@ enum IM_FAIL_CAUSE : int {
     IM_FAIL_D3D_DEVICE_NOT_AVAIL,
     IM_FAIL_D3D_DEVICE_OOM,
     IM_FAIL_D3D_PARAMS,
-    IM_FAIL_WIN32_INIT,
-    IM_FAIL_DX9_INIT,
 };
 
 IM_FAIL_CAUSE LoadImGui() {
-    auto gameHwnd = FindWindow("Phantasy Star Online 2", nullptr);
+    auto gameHWnd = FindWindow("Phantasy Star Online 2", nullptr);
 
-    auto didCreateSucceed = CreateDeviceD3D(gameHwnd);
+    auto didCreateSucceed = CreateDeviceD3D(gameHWnd);
     if (didCreateSucceed != D3D_FAIL_CAUSE::D3D_FAIL_NONE) {
         if (didCreateSucceed == D3D_FAIL_CAUSE::D3D_FAIL_VERSION)
             return IM_FAIL_CAUSE::IM_FAIL_D3D_VERSION;
@@ -95,10 +104,9 @@ IM_FAIL_CAUSE LoadImGui() {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
-    ImGui::CaptureMouseFromApp();
 
-    if (!ImGui_ImplWin32_Init(gameHwnd)) return IM_FAIL_CAUSE::IM_FAIL_WIN32_INIT;
-    if (!ImGui_ImplDX9_Init(device)) return IM_FAIL_CAUSE::IM_FAIL_DX9_INIT;
+    ImGui::CaptureMouseFromApp();
+    ImGui::GetIO().IniFilename = "PSO2TestPlugin.ini";
 
     return IM_FAIL_CAUSE::IM_FAIL_NONE;
 }
@@ -106,21 +114,25 @@ IM_FAIL_CAUSE LoadImGui() {
 static bool imguiInit = false;
 HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
     if (!imguiInit) {
-        auto gameHwnd = FindWindow("Phantasy Star Online 2", nullptr);
-        ImGui_ImplWin32_Init(gameHwnd);
+        auto gameHWnd = FindWindow("Phantasy Star Online 2", nullptr);
+
+        gameWindowProc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(gameHWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(HookedWndProc)));
+
+        ImGui_ImplWin32_Init(gameHWnd);
         ImGui_ImplDX9_Init(lpDevice);
+
         imguiInit = true;
-        MessageBox(gameHwnd, "Hooked!", nullptr, 0);
     }
 
     ImGui_ImplDX9_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
+    ImGui::GetIO().MouseDrawCursor = ImGui::IsAnyWindowHovered();
+
     auto showDemo = true;
     ImGui::ShowDemoWindow(&showDemo);
 
-    ImGui::EndFrame();
     ImGui::Render();
     ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
@@ -136,14 +148,14 @@ DWORD WINAPI PSO2TestPlugin::Initialize() {
         MessageBox(nullptr, msg.c_str(), nullptr, 0);
     }
 
-    dxVTable = (DWORD_PTR*)device;
-    dxVTable = (DWORD_PTR*)dxVTable[0];
+    dxVTable = reinterpret_cast<DWORD_PTR*>(device);
+    dxVTable = reinterpret_cast<DWORD_PTR*>(dxVTable[0]);
 
-    oEndScene = (EndScene)dxVTable[42];
+    oEndScene = reinterpret_cast<EndScene>(dxVTable[42]);
 
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourAttach(&(LPVOID&)oEndScene, (PBYTE)HookedEndScene);
+    DetourAttach(&reinterpret_cast<LPVOID&>(oEndScene), reinterpret_cast<PBYTE>(HookedEndScene));
     DetourTransactionCommit();
 
     d3d->Release();
@@ -154,10 +166,14 @@ DWORD WINAPI PSO2TestPlugin::Initialize() {
 }
 
 void PSO2TestPlugin::Dispose() {
-    if (oEndScene == nullptr) return;
+    if (oEndScene == nullptr || threadHandle == nullptr) return;
+
+    ImGui_ImplDX9_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
 
     DetourTransactionBegin();
-    DetourUpdateThread(GetCurrentThread());
-    DetourDetach(&(LPVOID&)oEndScene, (PBYTE)HookedEndScene);
+    DetourUpdateThread(threadHandle);
+    DetourDetach(&reinterpret_cast<LPVOID&>(oEndScene), reinterpret_cast<PBYTE>(HookedEndScene));
     DetourTransactionCommit();
 }
