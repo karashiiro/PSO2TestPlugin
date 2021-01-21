@@ -9,7 +9,6 @@
 #include "imgui_impl/imgui_impl_dx9.h"
 #include "imgui_impl/imgui_impl_win32.h"
 
-static HANDLE threadHandle = nullptr;
 static HWND dummy;
 static WNDPROC gameWindowProc;
 static D3DPRESENT_PARAMETERS options;
@@ -22,12 +21,13 @@ EndScene oEndScene = nullptr;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-void PSO2TestPlugin::SetHandle(HANDLE handle) {
-    threadHandle = handle;
-}
-
 LRESULT CALLBACK HookedWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
+
+    if (ImGui::IsAnyWindowHovered() && uMsg != WM_MOUSEMOVE) {
+        return TRUE;
+    }
+
     return CallWindowProc(gameWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
@@ -163,17 +163,4 @@ DWORD WINAPI PSO2TestPlugin::Initialize() {
     DestroyWindow(dummy);
 
     return 1;
-}
-
-void PSO2TestPlugin::Dispose() {
-    if (oEndScene == nullptr || threadHandle == nullptr) return;
-
-    ImGui_ImplDX9_Shutdown();
-    ImGui_ImplWin32_Shutdown();
-    ImGui::DestroyContext();
-
-    DetourTransactionBegin();
-    DetourUpdateThread(threadHandle);
-    DetourDetach(&reinterpret_cast<LPVOID&>(oEndScene), reinterpret_cast<PBYTE>(HookedEndScene));
-    DetourTransactionCommit();
 }
