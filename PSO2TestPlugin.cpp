@@ -10,7 +10,6 @@
 #include "imgui_impl/imgui_impl_dx9.h"
 #include "imgui_impl/imgui_impl_win32.h"
 
-static HWND dummy;
 static WNDPROC gameWindowProc = nullptr;
 static D3DPRESENT_PARAMETERS options;
 
@@ -33,12 +32,12 @@ LRESULT CALLBACK HookedWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     return CallWindowProc(gameWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
-std::tuple<IDirect3D9*, IDirect3DDevice9*> CreateDeviceD3D(HWND hWnd) {
-    dummy = CreateWindow("BUTTON", "", WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 300, 300, nullptr, nullptr, nullptr, nullptr);
+std::tuple<IDirect3D9*, IDirect3DDevice9*, HWND> CreateDeviceD3D(HWND hWnd) {
+    HWND dummy = CreateWindow("BUTTON", "", WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 300, 300, nullptr, nullptr, nullptr, nullptr);
 
     IDirect3D9* d3d;
     if (!(d3d = Direct3DCreate9(D3D_SDK_VERSION)))
-        return std::make_tuple(nullptr, nullptr);
+        return std::make_tuple(nullptr, nullptr, dummy);
 
     ZeroMemory(&options, sizeof(options));
     options.Windowed = true;
@@ -50,20 +49,21 @@ std::tuple<IDirect3D9*, IDirect3DDevice9*> CreateDeviceD3D(HWND hWnd) {
     IDirect3DDevice9* device;
     auto status = d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &options, &device);
     if (status != D3D_OK) {
-        return std::make_tuple(nullptr, nullptr);
+        return std::make_tuple(nullptr, nullptr, dummy);
     }
 
-    return std::make_tuple(d3d, device);
+    return std::make_tuple(d3d, device, dummy);
 }
 
-std::tuple<IDirect3D9*, IDirect3DDevice9*> LoadImGui() {
+std::tuple<IDirect3D9*, IDirect3DDevice9*, HWND> LoadImGui() {
     auto gameHWnd = GetGameWindowHandle();
 
     IDirect3D9* d3d;
     IDirect3DDevice9* device;
-    std::tie(d3d, device) = CreateDeviceD3D(gameHWnd);
+    HWND dummy;
+    std::tie(d3d, device, dummy) = CreateDeviceD3D(gameHWnd);
     if (d3d == nullptr || device == nullptr)
-        return std::make_tuple(nullptr, nullptr);
+        return std::make_tuple(nullptr, nullptr, dummy);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -72,7 +72,7 @@ std::tuple<IDirect3D9*, IDirect3DDevice9*> LoadImGui() {
     ImGui::CaptureMouseFromApp();
     ImGui::GetIO().IniFilename = PSO2TestPlugin::IniFilename;
 
-    return std::make_tuple(d3d, device);
+    return std::make_tuple(d3d, device, dummy);
 }
 
 HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
@@ -104,8 +104,10 @@ HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
 DWORD WINAPI PSO2TestPlugin::Initialize() {
     IDirect3D9* d3d;
     IDirect3DDevice9* device;
-    std::tie(d3d, device) = LoadImGui();
+    HWND dummy;
+    std::tie(d3d, device, dummy) = LoadImGui();
     if (d3d == nullptr || device == nullptr) {
+        DestroyWindow(dummy);
         return FALSE;
     }
 
