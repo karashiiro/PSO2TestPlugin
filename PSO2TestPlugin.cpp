@@ -56,15 +56,8 @@ std::tuple<IDirect3D9*, IDirect3DDevice9*, HWND> CreateDeviceD3D(HWND hWnd) {
     return std::make_tuple(d3d, device, dummy);
 }
 
-std::tuple<IDirect3D9*, IDirect3DDevice9*, HWND> LoadImGui() {
+void InitImGui(LPDIRECT3DDEVICE9 device) {
     auto gameHWnd = GetGameWindowHandle();
-
-    IDirect3D9* d3d;
-    IDirect3DDevice9* device;
-    HWND dummy;
-    std::tie(d3d, device, dummy) = CreateDeviceD3D(gameHWnd);
-    if (d3d == nullptr || device == nullptr)
-        return std::make_tuple(nullptr, nullptr, dummy);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -73,17 +66,15 @@ std::tuple<IDirect3D9*, IDirect3DDevice9*, HWND> LoadImGui() {
     ImGui::CaptureMouseFromApp();
     ImGui::GetIO().IniFilename = PSO2TestPlugin::IniFilename;
 
-    return std::make_tuple(d3d, device, dummy);
+    gameWindowProc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(gameHWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(HookedWndProc)));
+
+    ImGui_ImplWin32_Init(gameHWnd);
+    ImGui_ImplDX9_Init(device);
 }
 
 HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
     if (gameWindowProc == nullptr) {
-        auto gameHWnd = GetGameWindowHandle();
-
-        gameWindowProc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(gameHWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(HookedWndProc)));
-
-        ImGui_ImplWin32_Init(gameHWnd);
-        ImGui_ImplDX9_Init(lpDevice);
+        InitImGui(lpDevice);
     }
 
     ImGui_ImplDX9_NewFrame();
@@ -100,10 +91,12 @@ HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
 }
 
 DWORD WINAPI PSO2TestPlugin::Initialize() {
+    auto gameHWnd = GetGameWindowHandle();
+
     IDirect3D9* d3d;
     IDirect3DDevice9* device;
     HWND dummy;
-    std::tie(d3d, device, dummy) = LoadImGui();
+    std::tie(d3d, device, dummy) = CreateDeviceD3D(gameHWnd);
     if (d3d == nullptr || device == nullptr) {
         DestroyWindow(dummy);
         return FALSE;
