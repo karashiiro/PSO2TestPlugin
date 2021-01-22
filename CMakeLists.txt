@@ -16,7 +16,8 @@ CPMAddPackage(
 )
 if (imgui_ADDED)
     file(GLOB imgui_SOURCE_FILES ${imgui_SOURCE_DIR}/*.cpp)
-    add_library(imgui ${imgui_SOURCE_FILES})
+    set(imgui_backends ${imgui_SOURCE_DIR}/backends/imgui_impl_dx9.cpp ${imgui_SOURCE_DIR}/backends/imgui_impl_win32.cpp)
+    add_library(imgui ${imgui_SOURCE_FILES} ${imgui_backends})
     target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR})
 endif()
 
