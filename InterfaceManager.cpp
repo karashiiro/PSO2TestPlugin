@@ -1,21 +1,21 @@
 #include "InterfaceManager.h"
 
-InterfaceManager::InterfaceManager() = default;
+using namespace PSO2TestPlugin::Interface;
 
 void InterfaceManager::Execute() {
-    for (const auto& del : delegates) {
-        del();
+    for (const auto del : delegates) {
+        (*del)();
     }
 }
 
-void InterfaceManager::AddHandler(const std::function<void()> &delegate) {
-    delegates.push_back(std::ref(delegate));
+void InterfaceManager::AddHandler(DrawFunc *delegate) {
+    delegates.push_back(delegate);
 }
 
 [[maybe_unused]]
-void InterfaceManager::RemoveHandler(const std::function<void()> &delegate) {
+void InterfaceManager::RemoveHandler(DrawFunc *delegate) {
     for (auto it = delegates.begin(); it != delegates.end(); it++) {
-        if (&delegate == &(*it).get()) {
+        if (delegate == *it) {
             delegates.erase(it);
         }
     }

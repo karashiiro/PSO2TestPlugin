@@ -10,9 +10,11 @@
 #include "imgui_impl/imgui_impl_dx9.h"
 #include "imgui_impl/imgui_impl_win32.h"
 
+using namespace PSO2TestPlugin;
+
 static WNDPROC gameWindowProc = nullptr;
 static D3DPRESENT_PARAMETERS options;
-static std::shared_ptr<InterfaceManager> drawManager;
+static std::shared_ptr<Interface::InterfaceManager> drawManager;
 
 typedef HRESULT(WINAPI* EndScene)(LPDIRECT3DDEVICE9 device);
 static EndScene oEndScene = nullptr;
@@ -108,7 +110,7 @@ DWORD WINAPI PSO2TestPlugin::Initialize() {
 
     oEndScene = reinterpret_cast<EndScene>(dxVTable[42]);
 
-    drawManager = std::make_shared<InterfaceManager>();
+    drawManager = std::make_shared<Interface::InterfaceManager>();
 
     drawManager->AddHandler([]() {
         auto showDemo = true;

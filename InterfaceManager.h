@@ -1,21 +1,22 @@
 #pragma once
 
-#include <functional>
 #include <vector>
 
-class InterfaceManager {
-public:
-    explicit InterfaceManager();
+namespace PSO2TestPlugin::Interface {
+    typedef void(DrawFunc)();
 
-    // Runs all of the draw delegates the manager has.
-    void Execute();
+    class InterfaceManager {
+    public:
+        // Runs all of the draw delegates the manager has.
+        void Execute();
 
-    // Adds a delegate to the manager.
-    void AddHandler(const std::function<void()> &delegate);
+        // Adds a delegate to the manager.
+        void AddHandler(DrawFunc *delegate);
 
-    // Removes a delegate from the manager.
-    [[maybe_unused]]
-    void RemoveHandler(const std::function<void()> &delegate);
-private:
-    std::vector<std::reference_wrapper<const std::function<void()>>> delegates;
-};
+        // Removes a delegate from the manager.
+        [[maybe_unused]]
+        void RemoveHandler(DrawFunc *delegate);
+    private:
+        std::vector<DrawFunc*> delegates;
+    };
+}
