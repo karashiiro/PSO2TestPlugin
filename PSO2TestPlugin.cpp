@@ -1,9 +1,9 @@
 #include "PSO2TestPlugin.h"
 
-#include "imgui_impl/imgui_impl_dx9.h"
-#include "imgui_impl/imgui_impl_win32.h"
 #include "InterfaceManager.h"
 
+#include "backends/imgui_impl_dx9.h"
+#include "backends/imgui_impl_win32.h"
 #include "d3d9.h"
 #include "detours.h"
 #include "imgui.h"
@@ -35,7 +35,7 @@ LRESULT CALLBACK HookedWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         show = !show;
     }
 
-    if (ImGui::IsAnyWindowHovered() && uMsg != WM_MOUSEMOVE) {
+    if (ImGui::GetIO().WantCaptureMouse && uMsg != WM_MOUSEMOVE) {
         return TRUE;
     }
 
@@ -90,8 +90,7 @@ HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
-    // This hides the cursor when a context menu is open and not hovered, for some reason.
-    ImGui::GetIO().MouseDrawCursor = ImGui::IsAnyWindowHovered() || ImGui::IsAnyItemHovered();
+    ImGui::GetIO().MouseDrawCursor = ImGui::GetIO().WantCaptureMouse;
 
     if (show) {
         drawManager->Execute();

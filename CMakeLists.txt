@@ -11,7 +11,7 @@ include(cmake/CPM.cmake)
 CPMAddPackage(
         NAME imgui
         GITHUB_REPOSITORY ocornut/imgui
-        VERSION 1.79
+        VERSION 1.80
         DOWNLOAD_ONLY
 )
 if (imgui_ADDED)
