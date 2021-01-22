@@ -20,6 +20,8 @@ static std::unique_ptr<Interface::InterfaceManager> drawManager;
 typedef HRESULT(WINAPI* EndScene)(LPDIRECT3DDEVICE9 device);
 static EndScene oEndScene = nullptr;
 
+static bool show = false;
+
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 HWND GetGameWindowHandle() {
@@ -28,6 +30,10 @@ HWND GetGameWindowHandle() {
 
 LRESULT CALLBACK HookedWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
+
+    if (uMsg == WM_KEYDOWN && wParam == VK_DELETE) {
+        show = !show;
+    }
 
     if (ImGui::IsAnyWindowHovered() && uMsg != WM_MOUSEMOVE) {
         return TRUE;
@@ -87,7 +93,9 @@ HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
     // This hides the cursor when a context menu is open and not hovered, for some reason.
     ImGui::GetIO().MouseDrawCursor = ImGui::IsAnyWindowHovered() || ImGui::IsAnyItemHovered();
 
-    drawManager->Execute();
+    if (show) {
+        drawManager->Execute();
+    }
 
     ImGui::Render();
     ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
@@ -115,8 +123,7 @@ DWORD WINAPI PSO2TestPlugin::Initialize() {
     drawManager = std::make_unique<Interface::InterfaceManager>();
 
     drawManager->AddHandler([]() {
-        auto showDemo = true;
-        ImGui::ShowDemoWindow(&showDemo);
+        ImGui::ShowDemoWindow(&show);
     });
 
     DetourTransactionBegin();
