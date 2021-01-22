@@ -1,14 +1,15 @@
 #include "PSO2TestPlugin.h"
 
-#include <memory>
-#include <tuple>
+#include "imgui_impl/imgui_impl_dx9.h"
+#include "imgui_impl/imgui_impl_win32.h"
+#include "InterfaceManager.h"
 
 #include "d3d9.h"
 #include "detours.h"
-#include "InterfaceManager.h"
 #include "imgui.h"
-#include "imgui_impl/imgui_impl_dx9.h"
-#include "imgui_impl/imgui_impl_win32.h"
+
+#include <memory>
+#include <tuple>
 
 using namespace PSO2TestPlugin;
 
@@ -65,7 +66,6 @@ void InitImGui(LPDIRECT3DDEVICE9 device) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
-
     ImGui::CaptureMouseFromApp();
     ImGui::GetIO().IniFilename = PSO2TestPlugin::IniFilename;
 
@@ -86,7 +86,9 @@ HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
 
     // This hides the cursor when a context menu is open and not hovered, for some reason.
     ImGui::GetIO().MouseDrawCursor = ImGui::IsAnyWindowHovered() || ImGui::IsAnyItemHovered();
+
     drawManager->Execute();
+
     ImGui::Render();
     ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
