@@ -13,10 +13,13 @@ void InterfaceManager::AddHandler(DrawFunc *delegate) {
 }
 
 [[maybe_unused]]
-void InterfaceManager::RemoveHandler(DrawFunc *delegate) {
+bool InterfaceManager::RemoveHandler(DrawFunc *delegate) {
     for (auto it = delegates.begin(); it != delegates.end(); it++) {
         if (delegate == *it) {
             delegates.erase(it);
+            return true;
         }
     }
+
+    return false;
 }

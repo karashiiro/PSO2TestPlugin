@@ -15,7 +15,7 @@ namespace PSO2TestPlugin::Interface {
 
         // Removes a delegate from the manager.
         [[maybe_unused]]
-        void RemoveHandler(DrawFunc *delegate);
+        bool RemoveHandler(DrawFunc *delegate);
     private:
         std::vector<DrawFunc*> delegates;
     };
