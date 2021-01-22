@@ -15,7 +15,7 @@ using namespace PSO2TestPlugin;
 
 static WNDPROC gameWindowProc = nullptr;
 static D3DPRESENT_PARAMETERS options;
-static std::shared_ptr<Interface::InterfaceManager> drawManager;
+static std::unique_ptr<Interface::InterfaceManager> drawManager;
 
 typedef HRESULT(WINAPI* EndScene)(LPDIRECT3DDEVICE9 device);
 static EndScene oEndScene = nullptr;
@@ -112,7 +112,7 @@ DWORD WINAPI PSO2TestPlugin::Initialize() {
 
     oEndScene = reinterpret_cast<EndScene>(dxVTable[42]);
 
-    drawManager = std::make_shared<Interface::InterfaceManager>();
+    drawManager = std::make_unique<Interface::InterfaceManager>();
 
     drawManager->AddHandler([]() {
         auto showDemo = true;
