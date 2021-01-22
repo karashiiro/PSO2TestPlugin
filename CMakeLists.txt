@@ -3,7 +3,7 @@ project(PSO2TestPlugin)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_library(PSO2TestPlugin SHARED PSO2TestPlugin.cpp InterfaceManager.cpp imgui_impl/imgui_impl_win32.cpp imgui_impl/imgui_impl_dx9.cpp)
+add_library(PSO2TestPlugin SHARED PSO2TestPlugin.cpp InterfaceManager.cpp)
 
 # Dependencies
 include(cmake/CPM.cmake)
