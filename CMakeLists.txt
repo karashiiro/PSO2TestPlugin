@@ -25,7 +25,6 @@ CPMAddPackage(
         NAME Detours
         GITHUB_REPOSITORY microsoft/Detours
         VERSION 4.0.1
-        DOWNLOAD_ONLY
 )
 if (Detours_ADDED)
     # Detours is an nmake library, so we need to force some things in weird ways
@@ -45,4 +44,4 @@ if (nlohmann_json_ADDED)
     target_include_directories(nlohmann_json INTERFACE ${nlohmann_json_SOURCE_DIR}/include)
 endif()
 
-target_link_libraries(PSO2TestPlugin imgui ${Detours_Lib} d3d9 nlohmann_json)
+target_link_libraries(PSO2TestPlugin imgui ${Detours_Lib} d3d9 nlohmann_json winhttp)
