@@ -1,6 +1,7 @@
 #include "PSO2TestPlugin.h"
 
 #include "InterfaceManager.h"
+#include "Web.h"
 
 #include "backends/imgui_impl_dx9.h"
 #include "backends/imgui_impl_win32.h"
@@ -8,7 +9,6 @@
 #include "detours.h"
 #include "imgui.h"
 #include "nlohmann/json.hpp"
-#include <winhttp.h>
 
 #include <memory>
 #include <tuple>
@@ -25,50 +25,6 @@ static EndScene oEndScene = nullptr;
 static bool show = false;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-std::vector<char> Request(LPCWSTR serverName, LPCWSTR resource, bool https = false, LPCWSTR method = L"GET") {
-    auto session = WinHttpOpen(UserAgent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, nullptr, nullptr, 0);
-    if (session == nullptr) {
-        MessageBox(nullptr, ("WinHttpOpen: " + std::to_string(GetLastError())).c_str(), nullptr, 0);
-        abort();
-    }
-
-    auto port = https ? INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT;
-    auto connect = WinHttpConnect(session, serverName, port, 0);
-    if (connect == nullptr) {
-        MessageBox(nullptr, ("WinHttpConnect: " + std::to_string(GetLastError())).c_str(), nullptr, 0);
-        abort();
-    }
-
-    auto flags = https ? WINHTTP_FLAG_SECURE : 0;
-    auto request = WinHttpOpenRequest(connect, method, resource, nullptr, nullptr, nullptr, flags);
-    if (request == nullptr) {
-        MessageBox(nullptr, ("WinHttpOpenRequest: " + std::to_string(GetLastError())).c_str(), nullptr, 0);
-        abort();
-    }
-
-    auto response = WinHttpSendRequest(request, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0);
-    if (response == FALSE) {
-        MessageBox(nullptr, ("WinHttpSendRequest: " + std::to_string(GetLastError())).c_str(), nullptr, 0);
-        abort();
-    }
-
-    WinHttpReceiveResponse(request, nullptr);
-    std::vector<char> bytes;
-    DWORD numBytes = 0;
-    do {
-        WinHttpQueryDataAvailable(request, &numBytes);
-        auto chunk = new char[numBytes];
-        ZeroMemory(chunk, numBytes);
-        DWORD bytesRead = 0;
-        WinHttpReadData(request, chunk, numBytes, &bytesRead);
-        bytes.insert(bytes.end(), chunk, chunk + numBytes);
-        delete[] chunk;
-    } while (numBytes > 0);
-
-    WinHttpCloseHandle(request);
-    return bytes;
-}
 
 HWND GetGameWindowHandle() {
     return FindWindow("Phantasy Star Online 2", nullptr);
@@ -148,10 +104,6 @@ HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
     return oEndScene(lpDevice);
 }
 
-BOOL WINAPI HookedIsDebuggerPresent() {
-    return FALSE;
-}
-
 DWORD WINAPI PSO2TestPlugin::Initialize() {
     auto gameHWnd = GetGameWindowHandle();
 
@@ -168,7 +120,7 @@ DWORD WINAPI PSO2TestPlugin::Initialize() {
     dxVTable = reinterpret_cast<DWORD_PTR*>(dxVTable[0]);
     oEndScene = reinterpret_cast<EndScene>(dxVTable[42]);
 
-    auto res = Request(L"xivapi.com", L"/Item/30374", true, L"GET");
+    auto res = Web::Request(L"xivapi.com", L"/Item/30374", true, L"GET");
     std::string raw(res.begin(), res.end());
     static auto data = nlohmann::json::parse(raw);
 
