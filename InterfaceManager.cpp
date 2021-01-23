@@ -2,18 +2,18 @@
 
 using namespace PSO2TestPlugin::Interface;
 
-void InterfaceManager::Execute() {
-    for (const auto del : delegates) {
+void InterfaceManager::Execute() const {
+    for (const auto &del : delegates) {
         (*del)();
     }
 }
 
-void InterfaceManager::AddHandler(DrawFunc *delegate) {
+void InterfaceManager::AddHandler(DrawFunc *delegate) noexcept {
     delegates.push_back(delegate);
 }
 
 [[maybe_unused]]
-bool InterfaceManager::RemoveHandler(DrawFunc *delegate) {
+bool InterfaceManager::RemoveHandler(DrawFunc *delegate) noexcept {
     for (auto it = delegates.begin(); it != delegates.end(); it++) {
         if (delegate == *it) {
             delegates.erase(it);
