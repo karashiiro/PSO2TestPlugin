@@ -34,4 +34,17 @@ if (Detours_ADDED)
     target_include_directories(PSO2TestPlugin PUBLIC ${Detours_SOURCE_DIR}/include)
 endif()
 
-target_link_libraries(PSO2TestPlugin imgui ${Detours_Lib} d3d9)
+CPMAddPackage(
+        NAME memory_signature
+        GITHUB_REPOSITORY JustasMasiulis/memory_signature
+        VERSION 1.0.0
+        GIT_HASH 33e7b8a7b941eab8c51324c88fb91ab5904b5650
+)
+if (memory_signature_ADDED)
+    # std::range_error is undefined. It's possible that stdexcept was exposed in a dependency in C++11,
+    # and isn't anymore? Or perhaps it's a quirk of the author's compiler.
+    execute_process(COMMAND ${CMAKE_CURRENT_LIST_DIR}/patch-memsig.bat WORKING_DIRECTORY ${memory_signature_SOURCE_DIR}/include)
+    target_include_directories(memory_signature INTERFACE ${memory_signature_SOURCE_DIR}/include)
+endif()
+
+target_link_libraries(PSO2TestPlugin imgui ${Detours_Lib} d3d9 memory_signature)
