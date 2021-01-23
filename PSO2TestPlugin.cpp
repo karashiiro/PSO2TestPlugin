@@ -7,9 +7,6 @@
 #include "d3d9.h"
 #include "detours.h"
 #include "imgui.h"
-#include "memory_signature.hpp"
-#include <tchar.h>
-#include <TlHelp32.h>
 
 #include <memory>
 #include <tuple>
@@ -26,27 +23,6 @@ static EndScene oEndScene = nullptr;
 static bool show = false;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-std::tuple<DWORD_PTR, DWORD> GetModuleBaseAddress(DWORD dwProcID, TCHAR *szModuleName) {
-    DWORD_PTR dwModuleBaseAddress = 0;
-    DWORD dwModuleBaseSize = 0;
-    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, dwProcID);
-    if (hSnapshot != INVALID_HANDLE_VALUE) {
-        MODULEENTRY32 moduleEntry32;
-        moduleEntry32.dwSize = sizeof(MODULEENTRY32);
-        if (Module32First(hSnapshot, &moduleEntry32)) {
-            do {
-                if (_tcsicmp(moduleEntry32.szModule, szModuleName) == 0) {
-                    dwModuleBaseAddress = (DWORD_PTR)moduleEntry32.modBaseAddr;
-                    dwModuleBaseSize = moduleEntry32.modBaseSize;
-                    break;
-                }
-            } while (Module32Next(hSnapshot, &moduleEntry32));
-        }
-        CloseHandle(hSnapshot);
-    }
-    return std::make_tuple(dwModuleBaseAddress, dwModuleBaseSize);
-}
 
 HWND GetGameWindowHandle() {
     return FindWindow("Phantasy Star Online 2", nullptr);
@@ -142,19 +118,13 @@ DWORD WINAPI PSO2TestPlugin::Initialize() {
         return FALSE;
     }
 
-    /*auto pid = GetCurrentProcessId();
-    uintptr_t moduleBaseAddress = 0;
-    int moduleBaseSize = 0;
-    std::tie(moduleBaseAddress, moduleBaseSize) = GetModuleBaseAddress(pid, (TCHAR*)"pso2.exe");
-    std::vector<char> module(moduleBaseAddress, moduleBaseAddress + moduleBaseSize);*/
-
     auto dxVTable = reinterpret_cast<DWORD_PTR*>(device);
     dxVTable = reinterpret_cast<DWORD_PTR*>(dxVTable[0]);
     oEndScene = reinterpret_cast<EndScene>(dxVTable[42]);
 
     drawManager = std::make_unique<Interface::InterfaceManager>();
     drawManager->AddHandler([]() {
-        ImGui::Begin("a very cool window", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::Begin("a very cool window", &show, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::Text("hm hmm, some very nice text");
         ImGui::End();
     });
