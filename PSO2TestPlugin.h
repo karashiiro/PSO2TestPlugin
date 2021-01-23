@@ -4,6 +4,7 @@
 
 namespace PSO2TestPlugin {
     constexpr const char* const IniFilename = "PSO2TestPlugin.ini";
+    constexpr const char* const TestJson = R"({ "text": "Hello, world!" })";
 
     DWORD WINAPI Initialize();
 }

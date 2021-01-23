@@ -7,6 +7,7 @@
 #include "d3d9.h"
 #include "detours.h"
 #include "imgui.h"
+#include "nlohmann/json.hpp"
 
 #include <memory>
 #include <tuple>
@@ -122,10 +123,15 @@ DWORD WINAPI PSO2TestPlugin::Initialize() {
     dxVTable = reinterpret_cast<DWORD_PTR*>(dxVTable[0]);
     oEndScene = reinterpret_cast<EndScene>(dxVTable[42]);
 
+    static auto data = nlohmann::json::parse(TestJson);
+
     drawManager = std::make_unique<Interface::InterfaceManager>();
     drawManager->AddHandler([]() {
         ImGui::Begin("a very cool window", &show, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::Text("hm hmm, some very nice text");
+        ImGui::Text("the text: ");
+        ImGui::SameLine();
+        ImGui::Text("%s", data["text"].get<std::string>().c_str());
         ImGui::End();
     });
 
