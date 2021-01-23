@@ -10,14 +10,13 @@
 #include "imgui.h"
 #include "nlohmann/json.hpp"
 
-#include <memory>
 #include <tuple>
 
 using namespace PSO2TestPlugin;
 
 static WNDPROC gameWindowProc = nullptr;
 static D3DPRESENT_PARAMETERS options;
-static std::unique_ptr<Interface::InterfaceManager> drawManager;
+static Interface::InterfaceManager* drawManager;
 
 typedef HRESULT(WINAPI* EndScene)(LPDIRECT3DDEVICE9 device);
 static EndScene oEndScene = nullptr;
@@ -124,7 +123,7 @@ DWORD WINAPI PSO2TestPlugin::Initialize() {
     std::string raw(res.begin(), res.end());
     static auto data = nlohmann::json::parse(raw);
 
-    drawManager = std::make_unique<Interface::InterfaceManager>();
+    drawManager = new Interface::InterfaceManager();
     drawManager->AddHandler([]() {
         ImGui::Begin("a very cool window", &show, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::Text("hm hmm, some very nice text");
