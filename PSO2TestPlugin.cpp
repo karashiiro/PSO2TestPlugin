@@ -5,7 +5,6 @@
 
 #include "backends/imgui_impl_dx9.h"
 #include "backends/imgui_impl_win32.h"
-#include "d3d9.h"
 #include "detours.h"
 #include "imgui.h"
 #include "nlohmann/json.hpp"
@@ -103,7 +102,7 @@ HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
     return oEndScene(lpDevice);
 }
 
-DWORD WINAPI PSO2TestPlugin::Initialize() {
+BOOL WINAPI PSO2TestPlugin::Initialize() {
     auto gameHWnd = GetGameWindowHandle();
 
     IDirect3D9* d3d;
