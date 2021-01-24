@@ -60,7 +60,9 @@ IDirect3DDevice9* CreateDeviceD3D(HWND hWnd) {
 
     // This would be dangerous, if we didn't know the game held a reference already.
     // Doing this now prevents us from forgetting to do this later.
+    d3d->Release();
     device->Release();
+    DestroyWindow(dummy);
     return device;
 }
 
