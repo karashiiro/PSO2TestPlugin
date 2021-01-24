@@ -10,8 +10,6 @@
 #include "imgui.h"
 #include "nlohmann/json.hpp"
 
-#include <tuple>
-
 using namespace PSO2TestPlugin;
 
 static WNDPROC gameWindowProc = nullptr;
@@ -39,12 +37,12 @@ LRESULT CALLBACK HookedWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     return CallWindowProc(gameWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
-std::tuple<IDirect3D9*, IDirect3DDevice9*, HWND> CreateDeviceD3D(HWND hWnd) {
+IDirect3DDevice9* CreateDeviceD3D(HWND hWnd) {
     HWND dummy = CreateWindow("BUTTON", "", WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 300, 300, nullptr, nullptr, nullptr, nullptr);
 
     IDirect3D9* d3d;
     if (!(d3d = Direct3DCreate9(D3D_SDK_VERSION))) {
-        return std::make_tuple(nullptr, nullptr, dummy);
+        return nullptr;
     }
 
     ZeroMemory(&options, sizeof(options));
@@ -57,10 +55,13 @@ std::tuple<IDirect3D9*, IDirect3DDevice9*, HWND> CreateDeviceD3D(HWND hWnd) {
     IDirect3DDevice9* device;
     auto status = d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &options, &device);
     if (status != D3D_OK) {
-        return std::make_tuple(nullptr, nullptr, dummy);
+        return nullptr;
     }
 
-    return std::make_tuple(d3d, device, dummy);
+    // This would be dangerous, if we didn't know the game held a reference already.
+    // Doing this now prevents us from forgetting to do this later.
+    device->Release();
+    return device;
 }
 
 void InitImGui(LPDIRECT3DDEVICE9 device) {
@@ -101,13 +102,8 @@ HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
 
 BOOL WINAPI PSO2TestPlugin::Initialize() {
     auto gameHWnd = Util::GetGameWindowHandle();
-
-    IDirect3D9* d3d;
-    IDirect3DDevice9* device;
-    HWND dummy;
-    std::tie(d3d, device, dummy) = CreateDeviceD3D(gameHWnd);
-    if (d3d == nullptr || device == nullptr) {
-        DestroyWindow(dummy);
+    auto device = CreateDeviceD3D(gameHWnd);
+    if (device == nullptr) {
         return FALSE;
     }
 
@@ -133,10 +129,6 @@ BOOL WINAPI PSO2TestPlugin::Initialize() {
     DetourUpdateThread(GetCurrentThread());
     DetourAttach(&reinterpret_cast<PVOID&>(oEndScene), reinterpret_cast<PVOID>(HookedEndScene));
     DetourTransactionCommit();
-
-    d3d->Release();
-    device->Release();
-    DestroyWindow(dummy);
 
     return TRUE;
 }
