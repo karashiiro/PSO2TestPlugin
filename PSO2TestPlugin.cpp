@@ -1,6 +1,7 @@
 #include "PSO2TestPlugin.h"
 
 #include "InterfaceManager.h"
+#include "Util.h"
 #include "Web.h"
 
 #include "backends/imgui_impl_dx9.h"
@@ -23,10 +24,6 @@ static EndScene oEndScene = nullptr;
 static bool show = false;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-HWND GetGameWindowHandle() {
-    return FindWindow("Phantasy Star Online 2", nullptr);
-}
 
 LRESULT CALLBACK HookedWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
@@ -67,7 +64,7 @@ std::tuple<IDirect3D9*, IDirect3DDevice9*, HWND> CreateDeviceD3D(HWND hWnd) {
 }
 
 void InitImGui(LPDIRECT3DDEVICE9 device) {
-    auto gameHWnd = GetGameWindowHandle();
+    auto gameHWnd = Util::GetGameWindowHandle();
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -103,7 +100,7 @@ HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
 }
 
 BOOL WINAPI PSO2TestPlugin::Initialize() {
-    auto gameHWnd = GetGameWindowHandle();
+    auto gameHWnd = Util::GetGameWindowHandle();
 
     IDirect3D9* d3d;
     IDirect3DDevice9* device;
@@ -120,15 +117,15 @@ BOOL WINAPI PSO2TestPlugin::Initialize() {
 
     auto res = Web::Request(L"xivapi.com", L"/Item/30374", true, L"GET");
     std::string raw(res.begin(), res.end());
-    static auto data = nlohmann::json::parse(raw);
+    auto data = nlohmann::json::parse(raw);
+    auto itemName = data["Name"].get<std::string>();
+    static auto text = Util::JoinStrings("the text: ", itemName);
 
     drawManager = new Interface::InterfaceManager();
     drawManager->AddHandler([]() {
         ImGui::Begin("a very cool window", &show, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::Text("hm hmm, some very nice text");
-        ImGui::Text("the text: ");
-        ImGui::SameLine();
-        ImGui::Text("%s", data["Name"].get<std::string>().c_str());
+        ImGui::Text("%s", text.c_str());
         ImGui::End();
     });
 
