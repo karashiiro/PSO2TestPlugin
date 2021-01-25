@@ -27,12 +27,15 @@ CPMAddPackage(
         GITHUB_REPOSITORY microsoft/Detours
         VERSION 4.0.1
 )
+message(STATUS "Test")
 if (Detours_ADDED)
+    message(STATUS "Detours_ADDED TRUE")
     # Detours is an nmake library, so we need to prebuild it.
     execute_process(COMMAND nmake WORKING_DIRECTORY ${Detours_SOURCE_DIR}/src)
     set(Detours_Lib ${Detours_SOURCE_DIR}/lib.X86/detours.lib)
     target_include_directories(PSO2TestPlugin PUBLIC ${Detours_SOURCE_DIR}/include)
 endif()
+message(STATUS "Test End")
 
 CPMAddPackage(
         NAME nlohmann_json
