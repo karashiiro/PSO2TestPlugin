@@ -80,6 +80,9 @@ void InitImGui(LPDIRECT3DDEVICE9 device) {
     cfg.FontDataOwnedByAtlas = false;
     ImGui::GetIO().Fonts->AddFontFromMemoryTTF((void*)open_sans_ttf, static_cast<int>(open_sans_ttf_size), 14, &cfg);
 
+    auto style = ImGui::GetStyle();
+    style.WindowRounding = 0.3;
+
     gameWindowProc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(gameHWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(HookedWndProc)));
 
     ImGui_ImplWin32_Init(gameHWnd);
