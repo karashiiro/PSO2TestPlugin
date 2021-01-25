@@ -1,6 +1,7 @@
 #include "PSO2TestPlugin.h"
 
 #include "InterfaceManager.h"
+#include "resources.h"
 #include "Util.h"
 #include "Web.h"
 
@@ -74,6 +75,10 @@ void InitImGui(LPDIRECT3DDEVICE9 device) {
     ImGui::StyleColorsDark();
     ImGui::CaptureMouseFromApp();
     ImGui::GetIO().IniFilename = PSO2TestPlugin::IniFilename;
+
+    ImFontConfig cfg;
+    cfg.FontDataOwnedByAtlas = false;
+    ImGui::GetIO().Fonts->AddFontFromMemoryTTF((void*)open_sans_ttf, static_cast<int>(open_sans_ttf_size), 14, &cfg);
 
     gameWindowProc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(gameHWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(HookedWndProc)));
 

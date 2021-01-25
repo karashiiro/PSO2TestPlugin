@@ -7,6 +7,7 @@ add_library(PSO2TestPlugin SHARED PSO2TestPlugin.cpp InterfaceManager.cpp Web.cp
 
 # Dependencies
 include(cmake/CPM.cmake)
+include(cmake/EmbedResources.cmake)
 
 CPMAddPackage(
         NAME imgui
@@ -27,7 +28,7 @@ CPMAddPackage(
         VERSION 4.0.1
 )
 if (Detours_ADDED)
-    # Detours is an nmake library, so we need to force some things in weird ways
+    # Detours is an nmake library, so we need to prebuild it.
     execute_process(COMMAND nmake WORKING_DIRECTORY ${Detours_SOURCE_DIR}/src)
     set(Detours_Lib ${Detours_SOURCE_DIR}/lib.X86/detours.lib)
     target_include_directories(PSO2TestPlugin PUBLIC ${Detours_SOURCE_DIR}/include)
@@ -44,4 +45,5 @@ if (nlohmann_json_ADDED)
     target_include_directories(nlohmann_json INTERFACE ${nlohmann_json_SOURCE_DIR}/include)
 endif()
 
+create_resources(${CMAKE_SOURCE_DIR}/resources ${CMAKE_SOURCE_DIR}/resources.h)
 target_link_libraries(PSO2TestPlugin imgui ${Detours_Lib} d3d9 nlohmann_json winhttp)
