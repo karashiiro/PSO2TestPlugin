@@ -3,7 +3,7 @@ project(PSO2TestPlugin)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_library(PSO2TestPlugin SHARED PSO2TestPlugin.cpp InterfaceManager.cpp Web.cpp Util.cpp)
+add_library(PSO2TestPlugin SHARED src/PSO2TestPlugin.cpp src/InterfaceManager.cpp src/Web.cpp src/Util.cpp)
 
 # Dependencies
 include(cmake/CPM.cmake)
@@ -46,5 +46,5 @@ if (nlohmann_json_ADDED)
     target_include_directories(nlohmann_json INTERFACE ${nlohmann_json_SOURCE_DIR}/include)
 endif()
 
-create_resources(${CMAKE_SOURCE_DIR}/resources ${CMAKE_SOURCE_DIR}/resources.h)
+create_resources(${CMAKE_SOURCE_DIR}/resources ${CMAKE_SOURCE_DIR}/src/resources.h)
 target_link_libraries(PSO2TestPlugin imgui ${Detours_Lib} d3d9 nlohmann_json winhttp)
