@@ -24,4 +24,4 @@ jobs:
       - name: configure
         run: cmake -Bbuild
       - name: build
-        run: cmake --build build --config Debug -j4
+        run: cmake --build build -A Win32 --config Debug -j4
