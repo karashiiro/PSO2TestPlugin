@@ -41,8 +41,8 @@ LRESULT CALLBACK HookedWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 IDirect3DDevice9* CreateDeviceD3D(HWND hWnd) {
     HWND dummy = CreateWindow("BUTTON", "", WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 300, 300, nullptr, nullptr, nullptr, nullptr);
 
-    IDirect3D9* d3d;
-    if (!(d3d = Direct3DCreate9(D3D_SDK_VERSION))) {
+    auto d3d = Direct3DCreate9(D3D_SDK_VERSION);
+    if (d3d == nullptr) {
         return nullptr;
     }
 
@@ -54,8 +54,8 @@ IDirect3DDevice9* CreateDeviceD3D(HWND hWnd) {
     options.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; // Present without vsync, maximum unthrottled framerate
 
     IDirect3DDevice9* device;
-    auto status = d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &options, &device);
-    if (status != D3D_OK) {
+    if (const auto status = d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &options, &device);
+        status != D3D_OK) {
         return nullptr;
     }
 
