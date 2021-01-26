@@ -30,7 +30,7 @@ CPMAddPackage(
 if (Detours_ADDED)
     # Detours is an nmake library, so we need to prebuild it.
     # We need to do some wack setup to make it work universally, though.
-    execute_process(COMMAND ${CMAKE_SOURCE_DIR}/BuildDetours.bat WORKING_DIRECTORY ${Detours_SOURCE_DIR}/src)
+    execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/BuildDetours.bat WORKING_DIRECTORY ${Detours_SOURCE_DIR}/src)
     set(Detours_Lib ${Detours_SOURCE_DIR}/lib.X86/detours.lib)
     target_include_directories(PSO2TestPlugin PUBLIC ${Detours_SOURCE_DIR}/include)
 endif()
