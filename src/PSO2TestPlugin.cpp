@@ -13,13 +13,16 @@
 
 using namespace PSO2TestPlugin;
 
+typedef HRESULT(WINAPI* EndScene)(LPDIRECT3DDEVICE9 device);
+
+struct D3D9VTable {
+    EndScene EndScene;
+};
+
 static WNDPROC gameWindowProc = nullptr;
 static D3DPRESENT_PARAMETERS options;
 static Interface::InterfaceManager* drawManager;
-
-typedef HRESULT(WINAPI* EndScene)(LPDIRECT3DDEVICE9 device);
-static EndScene oEndScene = nullptr;
-
+static D3D9VTable* d3d9VTable;
 static bool show = false;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -38,7 +41,7 @@ LRESULT CALLBACK HookedWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     return CallWindowProc(gameWindowProc, hWnd, uMsg, wParam, lParam);
 }
 
-IDirect3DDevice9* CreateDeviceD3D(HWND hWnd) {
+D3D9VTable* BuildD3D9VTable(HWND hWnd) {
     auto dummy = CreateWindow("BUTTON", "", WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 300, 300, nullptr, nullptr, nullptr, nullptr);
 
     auto d3d = Direct3DCreate9(D3D_SDK_VERSION);
@@ -59,12 +62,17 @@ IDirect3DDevice9* CreateDeviceD3D(HWND hWnd) {
         return nullptr;
     }
 
-    // This would be dangerous, if we didn't know the game held a reference already.
-    // Doing this now prevents us from forgetting to do this later.
+    auto dxVTable = reinterpret_cast<DWORD_PTR*>(device);
+    dxVTable = reinterpret_cast<DWORD_PTR*>(dxVTable[0]);
+    auto oEndScene = reinterpret_cast<EndScene>(dxVTable[42]);
+
+    auto dxVTableCopy = new D3D9VTable{oEndScene};
+
     d3d->Release();
     device->Release();
     DestroyWindow(dummy);
-    return device;
+
+    return dxVTableCopy;
 }
 
 void InitImGui(LPDIRECT3DDEVICE9 device) {
@@ -104,19 +112,15 @@ HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
     ImGui::Render();
     ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
-    return oEndScene(lpDevice);
+    return d3d9VTable->EndScene(lpDevice);
 }
 
 BOOL WINAPI PSO2TestPlugin::Initialize() {
     auto gameHWnd = Util::GetGameWindowHandle();
-    auto device = CreateDeviceD3D(gameHWnd);
-    if (device == nullptr) {
+    d3d9VTable = BuildD3D9VTable(gameHWnd);
+    if (d3d9VTable == nullptr) {
         return FALSE;
     }
-
-    auto dxVTable = reinterpret_cast<DWORD_PTR*>(device);
-    dxVTable = reinterpret_cast<DWORD_PTR*>(dxVTable[0]);
-    oEndScene = reinterpret_cast<EndScene>(dxVTable[42]);
 
     auto res = Web::Request(L"xivapi.com", L"/Item/30374", true, L"GET");
     std::string raw(res.begin(), res.end());
@@ -125,7 +129,7 @@ BOOL WINAPI PSO2TestPlugin::Initialize() {
     static auto text = Util::JoinStrings("the text: ", itemName);
 
     drawManager = new Interface::InterfaceManager();
-    drawManager->AddHandler([]() {
+    drawManager->AddHandler([] {
         ImGui::Begin("a very cool window", &show, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::Text("hm hmm, some very nice text");
         ImGui::Text("%s", text.c_str());
@@ -134,7 +138,7 @@ BOOL WINAPI PSO2TestPlugin::Initialize() {
 
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourAttach(&reinterpret_cast<PVOID&>(oEndScene), reinterpret_cast<PVOID>(HookedEndScene));
+    DetourAttach(&reinterpret_cast<PVOID&>(d3d9VTable->EndScene), reinterpret_cast<PVOID>(HookedEndScene));
     DetourTransactionCommit();
 
     return TRUE;
