@@ -1,6 +1,5 @@
 #include "PSO2TestPlugin.h"
 
-#include "InterfaceManager.h"
 #include "resources.h"
 #include "Util.h"
 #include "Web.h"
@@ -21,7 +20,6 @@ struct D3D9VTable {
 
 static WNDPROC gameWindowProc = nullptr;
 static D3DPRESENT_PARAMETERS options;
-static Interface::InterfaceManager* drawManager;
 static D3D9VTable* d3d9VTable;
 static bool show = false;
 
@@ -106,7 +104,7 @@ HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
     ImGui::GetIO().MouseDrawCursor = ImGui::GetIO().WantCaptureMouse;
 
     if (show) {
-        drawManager->Execute();
+        DrawManager->Execute();
     }
 
     ImGui::Render();
@@ -122,7 +120,7 @@ BOOL WINAPI PSO2TestPlugin::Hook() {
         return FALSE;
     }
 
-    drawManager = new Interface::InterfaceManager();
+    DrawManager = new Interface::InterfaceManager();
 
     Initialize();
 
@@ -141,7 +139,7 @@ void PSO2TestPlugin::Initialize() {
     auto itemName = data["Name"].get<std::string>();
     static auto text = Util::JoinStrings("the text: ", itemName);
 
-    drawManager->AddHandler([] {
+    DrawManager->AddHandler([] {
         ImGui::Begin("a very cool window", &show, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::Text("hm hmm, some very nice text");
         ImGui::Text("%s", text.c_str());

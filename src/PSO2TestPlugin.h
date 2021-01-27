@@ -1,11 +1,15 @@
 #pragma once
 
+#include "InterfaceManager.h"
+
 #define WIN32_LEAN_AND_MEAN
 #include "d3d9.h"
 #include <Windows.h>
 
 namespace PSO2TestPlugin {
     constexpr const char* const IniFilename = "PSO2TestPlugin.ini";
+
+    static Interface::InterfaceManager* DrawManager;
 
     /// \brief Pre-initialization function. Should be called before accessing any other namespace object.
     /// \return Whether or not initialization succeeded.
