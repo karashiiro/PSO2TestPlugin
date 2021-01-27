@@ -3,7 +3,6 @@
 #include "InterfaceManager.h"
 
 #define WIN32_LEAN_AND_MEAN
-#include "d3d9.h"
 #include <Windows.h>
 
 namespace PSO2TestPlugin {
