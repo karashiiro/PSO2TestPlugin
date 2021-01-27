@@ -115,26 +115,16 @@ HRESULT WINAPI HookedEndScene(LPDIRECT3DDEVICE9 lpDevice) {
     return d3d9VTable->EndScene(lpDevice);
 }
 
-BOOL WINAPI PSO2TestPlugin::Initialize() {
+BOOL WINAPI PSO2TestPlugin::Hook() {
     auto gameHWnd = Util::GetGameWindowHandle();
     d3d9VTable = BuildD3D9VTable(gameHWnd);
     if (d3d9VTable == nullptr) {
         return FALSE;
     }
 
-    auto res = Web::Request(L"xivapi.com", L"/Item/30374", true, L"GET");
-    std::string raw(res.begin(), res.end());
-    auto data = nlohmann::json::parse(raw);
-    auto itemName = data["Name"].get<std::string>();
-    static auto text = Util::JoinStrings("the text: ", itemName);
-
     drawManager = new Interface::InterfaceManager();
-    drawManager->AddHandler([] {
-        ImGui::Begin("a very cool window", &show, ImGuiWindowFlags_AlwaysAutoResize);
-        ImGui::Text("hm hmm, some very nice text");
-        ImGui::Text("%s", text.c_str());
-        ImGui::End();
-    });
+
+    Initialize();
 
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
@@ -142,4 +132,19 @@ BOOL WINAPI PSO2TestPlugin::Initialize() {
     DetourTransactionCommit();
 
     return TRUE;
+}
+
+void PSO2TestPlugin::Initialize() {
+    auto res = Web::Request(L"xivapi.com", L"/Item/30374", true, L"GET");
+    std::string raw(res.begin(), res.end());
+    auto data = nlohmann::json::parse(raw);
+    auto itemName = data["Name"].get<std::string>();
+    static auto text = Util::JoinStrings("the text: ", itemName);
+
+    drawManager->AddHandler([] {
+        ImGui::Begin("a very cool window", &show, ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::Text("hm hmm, some very nice text");
+        ImGui::Text("%s", text.c_str());
+        ImGui::End();
+    });
 }
