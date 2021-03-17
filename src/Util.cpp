@@ -3,5 +3,5 @@
 using namespace PSO2TestPlugin;
 
 HWND Util::GetGameWindowHandle() {
-    return FindWindow("Phantasy Star Online 2", nullptr);
+    return FindWindow("PHANTASY STAR ONLINE 2 NEW GENESIS closedβtest", nullptr);
 }
